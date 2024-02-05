@@ -66,7 +66,9 @@ class PaymentController extends Controller
         'status'=>$data['status'],
         'attempts'=>$data['attempts'],
         'order_date'=>$data['created_at'],
-        'notes'=>$data['notes']
+        'notes'=>[
+            'description'=>'Order for 123'
+        ]
        ]);
 
         return response()->json([

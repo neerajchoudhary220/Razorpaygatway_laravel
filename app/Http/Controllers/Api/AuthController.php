@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\TestEvent;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\SignUpRequest;
 use App\Http\Resources\UserResource;
+use App\Models\Test;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -46,6 +48,7 @@ class AuthController extends Controller
         'message'=>'Login Successfully',
         'token'=>$token
        ];
+    //    event(new TestEvent(['msg'=>'User Login Successfully']));
        return response()->json($data);
     }
 
