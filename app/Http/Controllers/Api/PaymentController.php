@@ -46,7 +46,7 @@ class PaymentController extends Controller
         $user = $request->user('api');
         
         $input =[
-            'amount'=>(float)$order->amount,
+            'amount'=>((float)$order->amount)*100,
             'currency'=>'INR',
             'receipt'=>'Order Create From App',
             'notes'=>[
@@ -59,16 +59,16 @@ class PaymentController extends Controller
        $order->razorpaytransaction()->create([
         'user_id'=>$user->id,
         'razorpay_order_id'=>$data['id'],
-        'amount'=>$data['amount'],
-        'amount_due'=>$data['amount_due'],
-        'amount_paid'=>$data['amount_paid'],
+        'amount'=>(float)$data['amount']/100,
+        'amount_due'=>((float)$data['amount_due'])/100,
+        'amount_paid'=>((float)$data['amount_paid'])/100,
         'receipt'=>$data['receipt'],
         'status'=>$data['status'],
         'attempts'=>$data['attempts'],
         'order_date'=>$data['created_at'],
         'notes'=>[
-            'description'=>'Order for 123'
-        ]
+            "description"=>$data['notes']['description']
+        ],
        ]);
 
         return response()->json([

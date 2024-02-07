@@ -61,8 +61,8 @@
 <script>
   var options = {
     "key": "rzp_test_8Pa3NdNZRHaNFT", // Enter the Key ID generated from the Dashboard
-    "amount": "500",
-    "order_id":'order_NULXNPwdjebJ1c',
+    // "amount": "500",
+    "order_id":'order_NXwZjXoMui3sMh',
     "currency": "INR",
     "description": "Acme Corp",
     "image": "https://s3.amazonaws.com/rzp-mobile/images/rzp.jpg",
