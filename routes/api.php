@@ -25,9 +25,13 @@ Route::controller(OrderController::class)->prefix('order')->group(function(){
     Route::post('store','store');
 });
 Route::middleware('auth:api')->group(function(){
+    
     Route::get('logout',[AuthController::class,'Logout']);
-    Route::controller(ProfileController::class)->prefix('profile')->group(function(){
-        Route::get('details','Details');
+    Route::middleware('my')->group(function(){
+        Route::controller(ProfileController::class)->prefix('profile')->group(function(){
+            Route::get('details','Details');
+        });
     });
+   
 });
 

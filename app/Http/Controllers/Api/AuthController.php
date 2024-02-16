@@ -29,7 +29,7 @@ class AuthController extends Controller
             
         } catch (\Exception $e) {
             DB::rollBack();
-            dd($e); 
+            
         }
     }
 
