@@ -12,6 +12,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Passport\HasApiTokens;
 use Illuminate\Database\Eloquent\BroadcastsEvents;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class User extends Authenticatable
 {
@@ -26,6 +27,7 @@ class User extends Authenticatable
         'name',
         'mobile',
         'password',
+        'email'
     ];
 
     /**
@@ -73,6 +75,11 @@ class User extends Authenticatable
 
     public function broadcastOn(string $event):array{
         return ['my-channel'];
+    }
+   
+    public function razorpayCustomer(): HasOne
+    {
+        return $this->hasOne(RazorpayCustomer::class, 'user_id');
     }
 
 

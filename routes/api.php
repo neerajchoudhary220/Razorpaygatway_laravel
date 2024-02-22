@@ -27,11 +27,12 @@ Route::controller(OrderController::class)->prefix('order')->group(function(){
 Route::middleware('auth:api')->group(function(){
     
     Route::get('logout',[AuthController::class,'Logout']);
-    Route::middleware('my')->group(function(){
         Route::controller(ProfileController::class)->prefix('profile')->group(function(){
             Route::get('details','Details');
+            Route::patch('update','updateProfile');
         });
-    });
+
+    Route::get('payment/create-customer',[RazorPayController::class,'CreateCustomer']);
    
 });
 

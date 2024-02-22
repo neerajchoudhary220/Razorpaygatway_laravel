@@ -2,6 +2,7 @@
 
 use App\Events\TestEvent;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\LocationController;
 use App\Http\Controllers\Payment\RazorPayController;
 use App\Http\Controllers\Web\AuthController as WebAuthController;
 use App\Http\Controllers\Web\HomeController;
@@ -18,9 +19,9 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-// Route::get('/', function () {
-//     return view('welcome');
-// });
+Route::get('/', function () {
+    return view('welcome');
+});
 
 Route::name('web.')->group(function(){
     Route::get('login',[WebAuthController::class,'login'])->name('login.form');
@@ -47,4 +48,9 @@ Route::get('check',function(){
 
 
 
+
+Route::controller(LocationController::class)->group(function(){
+Route::get('find','index');
+Route::post('store','store')->name('location.store');
+});
 

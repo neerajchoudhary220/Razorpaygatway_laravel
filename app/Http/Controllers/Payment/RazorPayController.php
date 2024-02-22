@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Payment;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\RazorpayCustomerResource;
+use App\Models\RazorpayCustomer;
 use App\Models\RazorPayTransaction;
 use App\Models\RazorPayWebhook;
 use App\Models\Test;
@@ -21,18 +23,31 @@ class RazorPayController extends Controller
     public function CreateCustomer(Request $request)
     {
         try {
-            $key = env('RAZORPAY_KEY');
-            $secret = env('RAZORPAY_SECRET');
+            $key = config('app.RAZORPAY_KEY');
+            $secret = config('app.RAZORPAY_SECRET');
 
             $api = new Api($key, $secret);
+            $user = $request->user('api');
 
-            $user = [
-                'name' => 'Neeraj choudhary',
-                'contact' => "9509797669",
-                'email' => 'N/A'
+            $data = [
+                'name' => $user->name,
+                'contact' => $user->mobile,
+                'email' => $user->email
             ];
-            $result = $api->customer->create($user);
+            $result = $api->customer->create($data);
+            $user->razorpayCustomer()->create([
+                'customer_id' => $result['id'],
+                'entity' => $result['entity']
+            ]);
+
+            $results = new RazorpayCustomerResource($result);
+            return response()->json([
+                'data' => $results
+            ]);
+
+            // return $result;
         } catch (\Exception $e) {
+            Log::error($e->getMessage());
         }
     }
 
@@ -83,65 +98,47 @@ class RazorPayController extends Controller
             $webhookSignature = $request->header('X-Razorpay-Signature');
             // $api = new Api(config('app.RAZORPAY_KEY'),config('app.RAZORPAY_SECRET'));
             // $api->utility->verifyWebhookSignature($request->all(), $webhookSignature, $webhookSecret);
-            
+
             $payload = $request->getContent();
             $expectedSignature = hash_hmac('sha256', $payload, $webhookSecret);
 
-            
+
             if ($webhookSignature == $expectedSignature) {
                 $payment = $request['payload']['payment']['entity'];
-                
 
 
-                //  $data=   RazorPayWebhook::updateOrCreate(
-                //         [
-                //             'payment_id' => $payment['id']
-                //         ],
-                //         [
-                //             'payment_id' => $payment['id'],
-                //             'payment_order_id' => $payment['order_id'] ?? null,
-                //             'currency' => $payment['currency'],
-                //             'email' => $payment['email'],
-                //             'contact' => $payment['contact'],
-                //             'amount' => $payment['amount'],
-                //             'status' => $payment['status'],
-                //             'event' => $payment['event'] ?? null,
-                //         ]
-                //     );
-                if($request->event=='payment.captured')
-                $data =  RazorPayWebhook::create([
-                    'payment_id' => $payment['id'],
-                    'payment_order_id' => $payment['order_id'] ?? null,
-                    'currency' => $payment['currency'],
-                    'email' => $payment['email'],
-                    'contact' => $payment['contact'],
-                    'amount' => ((float)$payment['amount']) / 100,
-                    'status' => $payment['status'],
-                    'event' => $payment['event'] ?? null,
-                ]);
+
+                if ($request->event == 'payment.captured')
+                    $data =  RazorPayWebhook::create([
+                        'payment_id' => $payment['id'],
+                        'payment_order_id' => $payment['order_id'] ?? null,
+                        'currency' => $payment['currency'],
+                        'email' => $payment['email'],
+                        'contact' => $payment['contact'],
+                        'amount' => ((float)$payment['amount']) / 100,
+                        'status' => $payment['status'],
+                        'event' => $payment['event'] ?? null,
+                    ]);
 
                 if ($payment['order_id']) {
                     $RazorPayTransaction = RazorPayTransaction::where('razorpay_order_id', $payment['order_id']);
-                    if($payment['status']=='authorized') {
+                    if ($payment['status'] == 'authorized') {
                         $RazorPayTransaction->clone()->update(['status' => 'attempted']);
                     }
-                    if($payment['status']=='failed') {
+                    if ($payment['status'] == 'failed') {
                         $RazorPayTransaction->clone()->update(['status' => 'failed']);
                     }
-                   
-                   
                 }
 
-                if($request->event =="order.paid"){
+                if ($request->event == "order.paid") {
                     $order = $request['payload']['order']['entity'];
                     RazorPayTransaction::where('razorpay_order_id', $order['id'])
-                    ->update([
-                        'amount_paid'=>((float)$order['amount_paid'])/100,
-                        'amount_due'=>($order['amount_due']>0)?((float)$order['amount_due']/100):$order['amount_due'],
-                        'status'=>$order['status'],
-                        'attempts'=>$order['attempts'],
-                    ]);
-                    
+                        ->update([
+                            'amount_paid' => ((float)$order['amount_paid']) / 100,
+                            'amount_due' => ($order['amount_due'] > 0) ? ((float)$order['amount_due'] / 100) : $order['amount_due'],
+                            'status' => $order['status'],
+                            'attempts' => $order['attempts'],
+                        ]);
                 }
                 Log::alert($data);
             }

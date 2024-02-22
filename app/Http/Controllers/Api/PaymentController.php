@@ -44,7 +44,31 @@ class PaymentController extends Controller
         $razorpay = Helper::Razorpay();
         $order = Order::find($request->order_id);
         $user = $request->user('api');
+
+        $customer_id ='';
         
+        //Create Razorpay Customer
+      if(empty($user->razorpayCustomer)){
+        $data = [
+            'name' => $user->name,
+            'contact' => $user->mobile,
+            'email' => $user->email
+        ];
+        $result = $razorpay->customer->create($data);
+        $user->razorpayCustomer()->create([
+            'customer_id' => $result['id'],
+            'entity' => $result['entity']
+        ]);
+
+        $customer_id =$result['id'];
+      }else{
+        $customer_id =$user->razorpayCustomer->customer_id;
+      }
+
+       
+
+
+
         $input =[
             'amount'=>((float)$order->amount)*100,
             'currency'=>'INR',
@@ -53,8 +77,9 @@ class PaymentController extends Controller
                 'description'=>'Order for abc'
             ]
             ];
+
         $res = $razorpay->order->create($input);
-        $data= new RazorpayOrderResource($res);
+        $data= new RazorpayOrderResource($res,$customer_id);
         
        $order->razorpaytransaction()->create([
         'user_id'=>$user->id,
